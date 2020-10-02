@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
+using DotId.Persistence.Seeding.Services;
 using DotId.Persistence.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Repository.ImportData.SeedingData;
 using Xunit;
 
 namespace DotId.Persistence.Tests.Unit.Seeding.Services
@@ -25,15 +27,16 @@ namespace DotId.Persistence.Tests.Unit.Seeding.Services
                      .Options;
             var context = new DotIdContext(_options);
 
-            _dataSeeder = new DataSeeder(context);
+            var locationSeeder = new LocationImportStrategy(context);
+            var scoreSeeder = new ScoreImportStrategy(context);
+
+            _dataSeeder = new DataSeeder(locationSeeder, scoreSeeder);
         }
 
         [Fact]
         public async Task SeedData_DoesDataSeed_SeedSuccess()
         {
-            var context = new DotIdContext(_options);
-
-            await _dataSeeder.SeedDataAsync(context);
+            await _dataSeeder.SeedDataAsync();
         }
     }
 }

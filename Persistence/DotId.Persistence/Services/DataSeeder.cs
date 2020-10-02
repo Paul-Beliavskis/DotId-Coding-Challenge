@@ -1,32 +1,28 @@
 ﻿using System.Threading.Tasks;
-using DotId.Persistence.Seeding.Services;
-using Repository.ImportData.SeedingData;
+using DotId.Persistence.Seeding.Interfaces;
 
 namespace DotId.Persistence.Services
 {
     public class DataSeeder : IDataSeeder
     {
-        private readonly DotIdContext _dotIdContext;
+        private readonly ILocationImportStrategy _locationImportStrategy;
 
-        public DataSeeder(DotIdContext context)
+        private readonly IScoreImportStrategy _scoreImportStrategy;
+
+        public DataSeeder(ILocationImportStrategy locationImportStrategy, IScoreImportStrategy scoreImportStrategy)
         {
-            _dotIdContext = context;
+
+            _scoreImportStrategy = scoreImportStrategy;
+
+            _locationImportStrategy = locationImportStrategy;
+
         }
 
-        public async Task SeedDataAsync(DotIdContext context)
+        public async Task SeedDataAsync()
         {
-            context.Database.EnsureCreated();
+            _locationImportStrategy.SeedToContext();
 
-            var locationImportStrategy = new LocationImportStrategy();
-            var scoreImportStrategy = new ScoreImportStrategy();
-
-            await locationImportStrategy.SeedToContextAsync(context);
-
-            context.SaveChanges();
-
-            await scoreImportStrategy.SeedToContextAsync(context);
-
-            context.SaveChanges();
+            _scoreImportStrategy.SeedToContext();
         }
     }
 }

@@ -3,7 +3,6 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using CsvHelper;
 using DotId.Domain.Entities;
 using DotId.Persistence.Extensions;
@@ -11,14 +10,20 @@ using DotId.Persistence.Seeding.Interfaces;
 
 namespace DotId.Persistence.Seeding.Services
 {
-    public class LocationImportStrategy : IImportStrategy
+    public class LocationImportStrategy : ILocationImportStrategy
     {
         //this is declared in this file because we don't want any other file passed into this service
         private const string ImportFileName = "SEIFA_2016.csv";
 
-        public async Task SeedToContextAsync(DotIdContext seedingContext)
+        private readonly DotIdContext _dotIdContext;
+
+        public LocationImportStrategy(DotIdContext dotIdContext)
         {
-            seedingContext.Database.EnsureCreated();
+            _dotIdContext = dotIdContext;
+        }
+
+        public void SeedToContext()
+        {
 
             var importFileLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + $"/Seeding/SeedData/{ImportFileName}";
             try
@@ -29,7 +34,7 @@ namespace DotId.Persistence.Seeding.Services
                 {
 
                     var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
-                    await csvReader.SkipRecordsAsync(6);
+                    csvReader.SkipRecords(6);
 
                     while (csvReader.Read())
                     {
@@ -42,7 +47,7 @@ namespace DotId.Persistence.Seeding.Services
                         {
                             var location = new Location() { PlaceName = locationName, Code = locationCode, State = null };
 
-                            seedingContext.Locations.Add(location);
+                            _dotIdContext.Locations.Add(location);
                             csvReader.TryGetField<int>(2, out var disadvantage);
                             csvReader.TryGetField<int>(4, out var advantage);
 
@@ -55,7 +60,7 @@ namespace DotId.Persistence.Seeding.Services
                                 Location = location
                             };
 
-                            seedingContext.Scores.Add(score);
+                            _dotIdContext.Scores.Add(score);
 
                             csvReader.TryGetField<int>(3, out var disadvantageDecile);
                             csvReader.TryGetField<int>(5, out var advantageDecile);
@@ -79,10 +84,10 @@ namespace DotId.Persistence.Seeding.Services
                             };
 
                             scoreDetail.Score = score;
-                            seedingContext.ScoreDetails.Add(scoreDetail);
+                            _dotIdContext.ScoreDetails.Add(scoreDetail);
                         }
                     }
-
+                    _dotIdContext.SaveChanges();
                 }
             }
             // Todo: Create exception class to be caught and logged the right logging

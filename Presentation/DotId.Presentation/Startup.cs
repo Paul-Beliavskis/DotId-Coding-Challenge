@@ -1,13 +1,20 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Reflection;
+using DotId.Application;
+using DotId.Persistence;
+using DotId.Persistence.Constants;
+using DotId.Persistence.Repositories;
+using DotId.Persistence.Seeding.Interfaces;
+using DotId.Persistence.Seeding.Services;
+using DotId.Persistence.Services;
+using DotId.Presentation.Models;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Repository.ImportData.SeedingData;
 
 namespace DotId.Presentation
 {
@@ -24,11 +31,30 @@ namespace DotId.Presentation
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+
+            var assembly = Assembly.GetAssembly(typeof(IApplicationLayer));
+            services.AddDbContext<DotIdContext>(options => options.UseSqlServer(Configuration.GetValue<string>(ConfigurationConstants.SqlServer)));
+
+            services.Configure<ConnectionStrings>(Configuration.GetSection(ConfigurationConstants.SqlServer));
+            services.AddScoped<IQueryRepository, QueryRepository>();
+
+            services.AddScoped<ILocationImportStrategy, LocationImportStrategy>();
+            services.AddScoped<IScoreImportStrategy, ScoreImportStrategy>();
+
+            services.AddScoped<IDataSeeder, DataSeeder>();
+
+            services.AddMediatR(assembly);
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public async void Configure(IApplicationBuilder app, IWebHostEnvironment env, DotIdContext dotIdContext, IDataSeeder dataSeeder)
         {
+            dotIdContext.Database.EnsureDeleted();
+
+            dotIdContext.Database.Migrate();
+            await dataSeeder.SeedDataAsync();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -50,7 +76,7 @@ namespace DotId.Presentation
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Report}/{action=Index}/{id?}");
             });
         }
     }

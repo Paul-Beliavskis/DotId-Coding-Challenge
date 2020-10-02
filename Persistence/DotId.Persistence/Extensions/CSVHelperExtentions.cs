@@ -1,15 +1,14 @@
-﻿using System.Threading.Tasks;
-using CsvHelper;
+﻿using CsvHelper;
 
 namespace DotId.Persistence.Extensions
 {
     public static class CSVHelperExtentions
     {
-        public static async Task SkipRecordsAsync(this CsvReader csvReader, int recordsToSkip)
+        public static void SkipRecords(this CsvReader csvReader, int recordsToSkip)
         {
             for (var i = 0; i < recordsToSkip; ++i)
             {
-                await csvReader.ReadAsync();
+                csvReader.Read();
             }
         }
     }

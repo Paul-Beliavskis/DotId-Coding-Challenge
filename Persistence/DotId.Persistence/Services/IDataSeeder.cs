@@ -4,6 +4,6 @@ namespace DotId.Persistence.Services
 {
     public interface IDataSeeder
     {
-        public Task SeedDataAsync(DotIdContext dotIdContext);
+        public Task SeedDataAsync();
     }
 }

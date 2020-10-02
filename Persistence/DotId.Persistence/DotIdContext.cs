@@ -9,6 +9,7 @@ namespace DotId.Persistence
         {
 
         }
+
         public DbSet<State> States { get; set; }
 
         public DbSet<Location> Locations { get; set; }

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using CsvHelper;
 using DotId.Domain.Entities;
 using DotId.Persistence;
@@ -13,13 +13,20 @@ using DotId.Persistence.Seeding.Interfaces;
 
 namespace Repository.ImportData.SeedingData
 {
-    public class ScoreImportStrategy : IImportStrategy
+    public class ScoreImportStrategy : IScoreImportStrategy
     {
 
         //this is declared in this file because we don't want any other file passed into this service
         private const string ImportFileName = "SEIFA_2011.csv";
 
-        public async Task SeedToContextAsync(DotIdContext context)
+        private readonly DotIdContext _dotIdContext;
+
+        public ScoreImportStrategy(DotIdContext dotIdContext)
+        {
+            _dotIdContext = dotIdContext;
+        }
+
+        public void SeedToContext()
         {
             try
             {
@@ -31,9 +38,10 @@ namespace Repository.ImportData.SeedingData
 
                     var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
 
-                    await csvReader.SkipRecordsAsync(1);
+                    csvReader.SkipRecords(1);
 
                     var state = new State();
+
                     while (csvReader.Read())
                     {
                         csvReader.TryGetField<string>(0, out var stateName);
@@ -45,11 +53,14 @@ namespace Repository.ImportData.SeedingData
                             if (!string.IsNullOrWhiteSpace(stateName))
                             {
                                 state = new State() { StateName = stateName };
-                                context.States.Add(state);
+                                _dotIdContext.States.Add(state);
+                                _dotIdContext.SaveChanges();
+
+                                state = _dotIdContext.States.FirstOrDefault(x => x.StateName == stateName);
                             }
 
                             Location location = new Location() { PlaceName = locationName, State = state };
-                            context.Locations.Update(location);
+                            _dotIdContext.Locations.Update(location);
 
                             csvReader.TryGetField<int>(2, out var disadvantage);
 
@@ -63,10 +74,10 @@ namespace Repository.ImportData.SeedingData
                                 Location = location
                             };
 
-                            context.Scores.Update(score);
+                            _dotIdContext.Scores.Update(score);
                         }
                     }
-
+                    _dotIdContext.SaveChanges();
                 }
             }
             catch (Exception e)
