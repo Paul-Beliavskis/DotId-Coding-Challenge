@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using DotId.Persistence.Seeding.Interfaces;
+﻿using DotId.Persistence.Seeding.Interfaces;
 
 namespace DotId.Persistence.Services
 {
@@ -18,7 +17,7 @@ namespace DotId.Persistence.Services
 
         }
 
-        public async Task SeedDataAsync()
+        public void SeedData()
         {
             _locationImportStrategy.SeedToContext();
 

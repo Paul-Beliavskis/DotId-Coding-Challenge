@@ -2,11 +2,11 @@ using System.Reflection;
 using DotId.Application;
 using DotId.Persistence;
 using DotId.Persistence.Constants;
+using DotId.Persistence.DTO;
 using DotId.Persistence.Repositories;
 using DotId.Persistence.Seeding.Interfaces;
 using DotId.Persistence.Seeding.Services;
 using DotId.Persistence.Services;
-using DotId.Presentation.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -35,7 +35,10 @@ namespace DotId.Presentation
             var assembly = Assembly.GetAssembly(typeof(IApplicationLayer));
             services.AddDbContext<DotIdContext>(options => options.UseSqlServer(Configuration.GetValue<string>(ConfigurationConstants.SqlServer)));
 
-            services.Configure<ConnectionStrings>(Configuration.GetSection(ConfigurationConstants.SqlServer));
+            services.Configure<ConnectionStrings>(connectionStrings =>
+            Configuration.Bind(ConfigurationConstants.ConnectionStrings, connectionStrings)
+            );
+
             services.AddScoped<IQueryRepository, QueryRepository>();
 
             services.AddScoped<ILocationImportStrategy, LocationImportStrategy>();
@@ -48,12 +51,12 @@ namespace DotId.Presentation
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public async void Configure(IApplicationBuilder app, IWebHostEnvironment env, DotIdContext dotIdContext, IDataSeeder dataSeeder)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DotIdContext dotIdContext, IDataSeeder dataSeeder)
         {
             dotIdContext.Database.EnsureDeleted();
 
             dotIdContext.Database.Migrate();
-            await dataSeeder.SeedDataAsync();
+            dataSeeder.SeedData();
 
             if (env.IsDevelopment())
             {

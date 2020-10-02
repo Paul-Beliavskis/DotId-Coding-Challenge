@@ -1,9 +1,7 @@
-﻿using System.Threading.Tasks;
-
-namespace DotId.Persistence.Services
+﻿namespace DotId.Persistence.Services
 {
     public interface IDataSeeder
     {
-        public Task SeedDataAsync();
+        public void SeedData();
     }
 }

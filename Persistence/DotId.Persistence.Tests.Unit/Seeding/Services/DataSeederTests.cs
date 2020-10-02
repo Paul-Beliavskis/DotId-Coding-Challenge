@@ -36,7 +36,7 @@ namespace DotId.Persistence.Tests.Unit.Seeding.Services
         [Fact]
         public async Task SeedData_DoesDataSeed_SeedSuccess()
         {
-            await _dataSeeder.SeedDataAsync();
+            _dataSeeder.SeedData();
         }
     }
 }
