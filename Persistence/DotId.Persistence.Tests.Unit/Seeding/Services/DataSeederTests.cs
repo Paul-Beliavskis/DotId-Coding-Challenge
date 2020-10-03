@@ -1,9 +1,11 @@
 ﻿using System;
-using System.Threading.Tasks;
+using DotId.Persistence.DTO;
+using DotId.Persistence.Repositories;
 using DotId.Persistence.Seeding.Services;
 using DotId.Persistence.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Repository.ImportData.SeedingData;
 using Xunit;
 
@@ -28,13 +30,15 @@ namespace DotId.Persistence.Tests.Unit.Seeding.Services
             var context = new DotIdContext(_options);
 
             var locationSeeder = new LocationImportStrategy(context);
-            var scoreSeeder = new ScoreImportStrategy(context);
+            var queryRepository = new QueryRepository(Options.Create(new ConnectionStrings() { SqlServer = "Server=localhost;Database=DotId;User Id=testuser;Password=testuser;" }));
+
+            var scoreSeeder = new ScoreImportStrategy(context, queryRepository);
 
             _dataSeeder = new DataSeeder(locationSeeder, scoreSeeder);
         }
 
         [Fact]
-        public async Task SeedData_DoesDataSeed_SeedSuccess()
+        public void SeedData_DoesDataSeed_SeedSuccess()
         {
             _dataSeeder.SeedData();
         }

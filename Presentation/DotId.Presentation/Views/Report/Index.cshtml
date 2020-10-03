@@ -1,0 +1,34 @@
+﻿@using DotId.Presentation.Models;
+@model IEnumerable<ReportModel>
+@section Scripts
+{
+    <script>
+        $(function () {
+            $("#States_SelectedList").change(function (e) {
+                var val = $(this).val();
+                $("#reportPartial").load("/Report/ReportGrid?stateId=" + val);
+            });
+        });
+    </script>
+}
+
+@{
+    ViewBag.Title = "Report";
+}
+
+<h2>Report</h2>
+
+<div class="col-md-3"></div>
+<div class="row col-md-6">
+    @{
+        List<SelectListItem> states = ViewData["States"] as List<SelectListItem>;
+        string vicId = ViewData["VicId"] as string;
+    }
+    @Html.DropDownList("States_SelectedList", states)
+</div>
+<div class="col-md-3"></div>
+<br />
+<br />
+<div id="reportPartial">
+    @Html.Partial("ReportGrid", Model)
+</div>

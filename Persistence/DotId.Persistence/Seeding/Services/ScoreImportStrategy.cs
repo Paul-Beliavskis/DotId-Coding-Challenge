@@ -9,6 +9,7 @@ using DotId.Domain.Entities;
 using DotId.Persistence;
 using DotId.Persistence.Exceptions;
 using DotId.Persistence.Extensions;
+using DotId.Persistence.Repositories;
 using DotId.Persistence.Seeding.Interfaces;
 
 namespace Repository.ImportData.SeedingData
@@ -21,9 +22,13 @@ namespace Repository.ImportData.SeedingData
 
         private readonly DotIdContext _dotIdContext;
 
-        public ScoreImportStrategy(DotIdContext dotIdContext)
+        private readonly IQueryRepository _queryRepository;
+
+        public ScoreImportStrategy(DotIdContext dotIdContext, IQueryRepository queryRepository)
         {
             _dotIdContext = dotIdContext;
+
+            _queryRepository = queryRepository;
         }
 
         public void SeedToContext()
@@ -40,18 +45,24 @@ namespace Repository.ImportData.SeedingData
 
                     csvReader.SkipRecords(1);
 
-                    var state = new State();
+                    var stateName = string.Empty;
 
                     while (csvReader.Read())
                     {
-                        csvReader.TryGetField<string>(0, out var stateName);
+                        csvReader.TryGetField<string>(0, out var stateValue);
+
+                        stateName = string.IsNullOrWhiteSpace(stateValue) ? stateName : stateValue;
 
                         csvReader.TryGetField<string>(1, out var locationName);
 
                         if (!string.IsNullOrWhiteSpace(locationName))
                         {
-                            if (!string.IsNullOrWhiteSpace(stateName))
+
+                            var state = _dotIdContext.States.FirstOrDefault(x => x.StateName.Equals(stateName));
+
+                            if (state == null && !string.IsNullOrWhiteSpace(stateName))
                             {
+
                                 state = new State() { StateName = stateName };
                                 _dotIdContext.States.Add(state);
                                 _dotIdContext.SaveChanges();
@@ -59,8 +70,12 @@ namespace Repository.ImportData.SeedingData
                                 state = _dotIdContext.States.FirstOrDefault(x => x.StateName == stateName);
                             }
 
-                            Location location = new Location() { PlaceName = locationName, State = state };
-                            _dotIdContext.Locations.Update(location);
+                            var location = _dotIdContext.Locations.FirstOrDefault(x => x.PlaceName == locationName.Trim());
+
+                            if (location != null && state != null)
+                            {
+                                location.State = state;
+                            }
 
                             csvReader.TryGetField<int>(2, out var disadvantage);
 
@@ -79,11 +94,27 @@ namespace Repository.ImportData.SeedingData
                     }
                     _dotIdContext.SaveChanges();
                 }
+
+                PopulateMedian();
             }
             catch (Exception e)
             {
                 throw new FailedToSeedException($"Seeding data from {ImportFileName} has failed", e);
             }
+        }
+
+        public void PopulateMedian()
+        {
+            var states = _dotIdContext.States.ToList();
+
+            foreach (var state in states)
+            {
+                var scores = _queryRepository.GetScoresForState(state.StateName).ToList();
+
+                state.Median = scores.GetMedian();
+            }
+
+            _dotIdContext.SaveChanges();
         }
     }
 }

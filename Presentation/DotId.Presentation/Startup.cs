@@ -1,4 +1,5 @@
 using System.Reflection;
+using AutoMapper;
 using DotId.Application;
 using DotId.Persistence;
 using DotId.Persistence.Constants;
@@ -7,6 +8,7 @@ using DotId.Persistence.Repositories;
 using DotId.Persistence.Seeding.Interfaces;
 using DotId.Persistence.Seeding.Services;
 using DotId.Persistence.Services;
+using DotId.Presentation.Models;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -43,6 +45,15 @@ namespace DotId.Presentation
 
             services.AddScoped<ILocationImportStrategy, LocationImportStrategy>();
             services.AddScoped<IScoreImportStrategy, ScoreImportStrategy>();
+            // Auto Mapper Configurations
+            var mapperConfig = new MapperConfiguration(mc =>
+            {
+                mc.CreateMap<DotId.Application.Models.ReportModel, ReportModel>();
+            });
+
+            var mapper = mapperConfig.CreateMapper();
+            services.AddSingleton(mapper);
+
 
             services.AddScoped<IDataSeeder, DataSeeder>();
 
@@ -53,10 +64,10 @@ namespace DotId.Presentation
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DotIdContext dotIdContext, IDataSeeder dataSeeder)
         {
-            dotIdContext.Database.EnsureDeleted();
+            //dotIdContext.Database.EnsureDeleted();
 
-            dotIdContext.Database.Migrate();
-            dataSeeder.SeedData();
+            //dotIdContext.Database.Migrate();
+            //dataSeeder.SeedData();
 
             if (env.IsDevelopment())
             {

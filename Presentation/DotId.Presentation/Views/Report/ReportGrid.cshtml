@@ -1,0 +1,48 @@
+﻿@using DotId.Presentation.Models;
+@model IEnumerable<ReportModel>
+@{
+    Layout = null;
+}
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Disadvantage2011)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Disadvantage2016)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Comparison)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.PlaceName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.StateName)
+        </th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Disadvantage2011)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Disadvantage2016)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Comparison)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PlaceName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.StateName)
+            </td>
+
+        </tr>
+    }
+
+</table>
+
